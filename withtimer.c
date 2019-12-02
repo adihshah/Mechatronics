@@ -147,11 +147,17 @@ ISR(PCINT2_vect){
 
 void initializeColor() {
 sei(); // Enable interrupts globally
-PCICR = 0b00000101; // Initialize Register B and D for PC interrupts
+PCICR = 0b00000101; // Initialize Register B (color sensor) and D (QTI) for PC interrupts
 DDRB &= 0b11101111; // Pin PB4 is input pin
 DDRB |= 0b00100000; // Pin PB5 is output LED
 TCCR1B |=0b00000001; // Set the timer prescaler to 1
 TCCR1B &=0b11111001;
+}
+
+void initqti(){
+	PCICR = 0b00000101; // Initialize Register B (color sensor) and D (QTI) for PC interrupts
+	PCMSK2 |= 0b11000000; // Enable PD6,D7 as a PC interrupts
+	DDRD = 0;
 }
 
 //returns 0 if yellow and 1 if blue
@@ -184,6 +190,9 @@ int main(void) {
 	initializeColor(); // Initialize the stuff
 	PORTB |= 0b00100000; // Set B5 as output
 	int initcolor = 0; // O if yellow, 1 if blue
+	//******************CHANGED*******************//
+	//int numcolorchanges = 0;
+	//******************CHANGED*******************//
 	if (getColor() == 1) initcolor = 1;
 
 	DDRB = 0b00001111; 
@@ -191,10 +200,29 @@ int main(void) {
 	//For QTI Pin Change interupt, set appropriate pcvector, set app registers as output, use PCMSK to enable interrupts on those pins,
 	//initialize PCICR for app register
 	PCMSK2 |= 0b11000000; // Enable PD6,D7 as a PC interrupts
+	initqti();
+
+	//******************CHANGED*******************//
+	//Timer 2 used to calculate time since color change
+	/*TCCR2B |=0b00000001; // Set the timer2 prescaler to 1 - Step 1
+	TCCR2B &=0b11111001;*/ // Set the timer2 prescaler to 1 - Step 2
+	//We don't set TIMSK - because this isn't an interrupt, we're just using it to calculate time.
+	//We use timer2 since timer1 is used up for color detection.
+	//******************CHANGED*******************//
 
 
     while(1){
-	
+		
+		//******************CHANGED*******************//
+
+		//if timer value exceed amount determined experimentally, stop, and break
+		//replace 'value' with an actual integer
+		/*if (TCNT2 > value){
+			stopforward();
+			break;
+		}*/
+		//******************CHANGED*******************//
+
 		startforward()
 		_delay_ms(75); //can vary
 
@@ -204,6 +232,14 @@ int main(void) {
 
 		//Turn around 180 degrees if you're not on your original color
 		if (currcolor != initcolor){
+			//******************CHANGED*******************//
+			//Start timer
+			/*numcolorchanges = numcolorchanges + 1;
+			if (numcolorchanges == 1) {
+				TCNT2 = 0;
+			}*/
+			//******************CHANGED*******************//
+ 
 			stopforward();
 			startright(); //turn 180 degrees
 			_delay_ms(1200);//adjust to make it 180 degreees
@@ -215,3 +251,12 @@ int main(void) {
 
 	}
 
+//******************CHANGED*******************//
+
+//Second infinite while loop so code doesn't leave microcontroller
+	while(1){
+
+	}
+//******************CHANGED*******************//
+
+}
