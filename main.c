@@ -150,16 +150,33 @@ ISR(PCINT2_vect){
 		}
 }
 
+ISR(TIMER2_COMPA_vect){
+	//if it enters interrupt, means that you have reach the middle
+	//of second half
+	stopforward();
+	stopback();
+	stopleft();
+	stopright();
+	PORTD |= 0b00100000; //Start the motor
+	_delay_ms(1000); //continue motor for 1 second
+	PORTD &= 0b11011111; //Stop the motor
+
+}
+
 void initializeColor() {
 sei(); // Enable interrupts globally
 PCICR = 0b00000101; // Initialize Register B (color sensor) and D (QTI) for PC interrupts
 DDRB &= 0b11101111; // Pin PB4 is input pin
 DDRB |= 0b00100000; // Pin PB5 is output LED
+TCCR1B |=0b00000001; // Set the timer1 prescaler to 1
+TCCR1B &=0b11111001;
 }
 
 void initimer(){
-TCCR1B |=0b00000001; // Set the timer prescaler to 1
-TCCR1B &=0b11111001;
+TCCR2B |=0b00000001; // Set the timer2 prescaler to 1 - Step 1
+TCCR2B &=0b11111001;*/ // Set the timer2 prescaler to 1 - Step 2
+OCR2A = 16000; //Number of clock ticks
+//TIMSK2 |= 0b00000010 if enabled and 0 otherwise
 }
 
 void initqti(){
@@ -189,6 +206,7 @@ int main(void) {
 	//initialize PCICR for app register
 	PCMSK2 |= 0b11000000; // Enable PD6,D7 as a PC interrupts
 	initimer();
+	int numcolorchanges = 0;
 	
 	PORTB |= 0b00100000; // Set B5 as output
 	int initcolor = 0; // O if yellow, 1 if blue
@@ -201,13 +219,9 @@ int main(void) {
 
 
 
-	//******************CHANGED*******************//
-	//Timer 2 used to calculate time since color change
-	/*TCCR2B |=0b00000001; // Set the timer2 prescaler to 1 - Step 1
-	TCCR2B &=0b11111001;*/ // Set the timer2 prescaler to 1 - Step 2
-	//We don't set TIMSK - because this isn't an interrupt, we're just using it to calculate time.
-	//We use timer2 since timer1 is used up for color detection.
-	//******************CHANGED*******************//
+	//Timer 2 used to calculate time since timer1 is used for color change
+	//We don't set TIMSK - because this isn't an interrupt, 
+
 
 
     while(1){
@@ -231,14 +245,15 @@ int main(void) {
 
 		//Turn around 180 degrees if you're not on your original color
 		if (currcolor != initcolor){
-			//******************CHANGED*******************//
-			//Start timer
-			/*numcolorchanges = numcolorchanges + 1;
-			if (numcolorchanges == 1) {
+			if (numcolorchanges == 0){
 				TCNT2 = 0;
-			}*/
-			//******************CHANGED*******************//
-			PCMSK2 &= 0b00000000; // Disable PD6,D7 as a PC interrupts
+				TIMSK2 |= 0b00000010; //if enabled and 0 otherwise
+				numcolorchanges ++;
+			}
+
+			
+
+			/*PCMSK2 &= 0b00000000; // Disable PD6,D7 as a PC interrupts
 			stopforward();
 			startright(); //turn 180 degrees
 			_delay_ms(1440);//adjust to make it 180 degreees
@@ -246,7 +261,7 @@ int main(void) {
 			startforward(); //go ahead so you're back in the original color
 			_delay_ms(400);
 			stopforward();
-			PCMSK2 |= 0b11000000; // Enable PD6,D7 as a PC interrupts
+			PCMSK2 |= 0b11000000; // Enable PD6,D7 as a PC interrupts*/
 
 		}
 
