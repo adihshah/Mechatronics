@@ -150,7 +150,7 @@ ISR(PCINT2_vect){
 		}
 }
 
-ISR(TIMER2_COMPA_vect){
+/*ISR(TIMER2_COMPA_vect){
 	//if it enters interrupt, means that you have reach the middle
 	//of second half
 	stopforward();
@@ -161,7 +161,7 @@ ISR(TIMER2_COMPA_vect){
 	_delay_ms(1000); //continue motor for 1 second
 	PORTD &= 0b11011111; //Stop the motor
 
-}
+}*/
 
 void initializeColor() {
 sei(); // Enable interrupts globally
@@ -172,18 +172,18 @@ TCCR1B |=0b00000001; // Set the timer1 prescaler to 1
 TCCR1B &=0b11111001;
 }
 
-void initimer(){
+/*void initimer(){
 TCCR2B |=0b00000001; // Set the timer2 prescaler to 1 - Step 1
-TCCR2B &=0b11111001;*/ // Set the timer2 prescaler to 1 - Step 2
+TCCR2B &=0b11111001; // Set the timer2 prescaler to 1 - Step 2
 OCR2A = 16000; //Number of clock ticks
 //TIMSK2 |= 0b00000010 if enabled and 0 otherwise
-}
+}*/
 
-void initqti(){
+/*void initqti(){
 	PCICR = 0b00000101; // Initialize Register B (color sensor) and D (QTI) for PC interrupts
 	PCMSK2 |= 0b11000000; // Enable PD6,D7 as a PC interrupts
 	DDRD = 0;
-}
+}*/
 
 //returns 0 if yellow and 1 if blue
 int getColor() {
@@ -201,11 +201,11 @@ else return 1;
 int main(void) {
 	init_uart(); // Initialize serial
 	initializeColor(); // Initialize color sensor
-	initqti();
+	//initqti();
 	//For QTI Pin Change interupt, set appropriate pcvector, set app registers as output, use PCMSK to enable interrupts on those pins,
 	//initialize PCICR for app register
 	PCMSK2 |= 0b11000000; // Enable PD6,D7 as a PC interrupts
-	initimer();
+	//initimer();
 	int numcolorchanges = 0;
 	
 	PORTB |= 0b00100000; // Set B5 as output
@@ -246,9 +246,21 @@ int main(void) {
 		//Turn around 180 degrees if you're not on your original color
 		if (currcolor != initcolor){
 			if (numcolorchanges == 0){
-				TCNT2 = 0;
-				TIMSK2 |= 0b00000010; //if enabled and 0 otherwise
+				/*TCNT2 = 0;
+				TIMSK2 |= 0b00000010; //if enabled and 0 otherwise*/
 				numcolorchanges ++;
+				//rest of the logic
+				startforward();
+				_delay_ms(4000);
+				stopforward();
+				PORTD |= 0b00100000; //Start the motor
+				_delay_ms(2000); //continue motor for 2 seconds
+				PORTD &= 0b11011111; //Stop the motor
+				startback();
+				_delay_ms(8000);
+				stopback();
+				_delay_ms(100000);
+
 			}
 
 			
@@ -266,13 +278,5 @@ int main(void) {
 		}
 
 	}
-
-//******************CHANGED*******************//
-
-//Second infinite while loop so code doesn't leave microcontroller
-	while(1){
-
-	}
-//******************CHANGED*******************//
 
 }
