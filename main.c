@@ -3,6 +3,14 @@
  *
  * Created: 11/22/2019 4:49:12 PM
  * Author : MAE Lab
+ * 
+ * Resources for PWM
+ * https://sites.google.com/site/qeewiki/books/avr-guide/pwm-on-the-atmega328
+ * Lecture Slide 
+ * Arduino Pinout
+ * Set Pins B1 and B2 (Bot moves forward) to 25% PWM using Timer1
+ * Doubts: 
+ * 1.Can we use timer1? (Since its used for color sensor)
  */ 
 
 
@@ -17,7 +25,7 @@ int period=0;
 //Can't ever have B0,B1 or B2,B3 both high at the same time
 
 void startback(){
-	PORTB |= 0b00001001; //go forward
+	PORTB |= 0b00001001; 
 }
 
 void stopback(){
