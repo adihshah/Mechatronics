@@ -16,11 +16,11 @@ int period=0;
 
 //Can't ever have B0,B1 or B2,B3 both high at the same time
 
-void startback(){
+void startforward(){
 	PORTB |= 0b00001001; //go forward
 }
 
-void stopback(){
+void stopforward(){
 	PORTB &= 0b11110110;
 }
 
@@ -40,11 +40,11 @@ void stopleft(){
 	PORTB &= 0b11111010;
 }
 
-void startforward(){
+void startback(){
 	PORTB |= 0b00000110;
 }
 
-void stopforward(){
+void stopback(){
 	PORTB &= 0b11111001;
 }
 
@@ -251,13 +251,13 @@ int main(void) {
 				numcolorchanges ++;
 				//rest of the logic
 				startforward();
-				_delay_ms(1000);
+				_delay_ms(900);
 				stopforward();
 				PORTD |= 0b00100000; //Start the motor
-				_delay_ms(2000); //continue motor for 2 seconds
+				_delay_ms(480); //continue motor for 0.4 seconds
 				PORTD &= 0b11011111; //Stop the motor
 				startback();
-				_delay_ms(2000);
+				_delay_ms(1800);
 				stopback();
 				_delay_ms(100000);
 
