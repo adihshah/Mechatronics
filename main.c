@@ -160,7 +160,6 @@ ISR(PCINT2_vect){
 	PORTD |= 0b00100000; //Start the motor
 	_delay_ms(1000); //continue motor for 1 second
 	PORTD &= 0b11011111; //Stop the motor
-
 }*/
 
 void initializeColor() {
@@ -215,7 +214,8 @@ int main(void) {
 	//******************CHANGED*******************//
 	if (getColor() == 1) initcolor = 1;
 
-	DDRB = 0b00001111; 
+	DDRB = 0b00001111;
+	DDRD = 0b00100000; 
 
 
 
@@ -251,13 +251,13 @@ int main(void) {
 				numcolorchanges ++;
 				//rest of the logic
 				startforward();
-				_delay_ms(4000);
+				_delay_ms(1000);
 				stopforward();
 				PORTD |= 0b00100000; //Start the motor
 				_delay_ms(2000); //continue motor for 2 seconds
 				PORTD &= 0b11011111; //Stop the motor
 				startback();
-				_delay_ms(8000);
+				_delay_ms(2000);
 				stopback();
 				_delay_ms(100000);
 
