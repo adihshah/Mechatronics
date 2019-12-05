@@ -16,11 +16,11 @@ int period=0;
 
 //Can't ever have B0,B1 or B2,B3 both high at the same time
 
-void startforward(){
+void startback(){
 	PORTB |= 0b00001001; //go forward
 }
 
-void stopforward(){
+void stopback(){
 	PORTB &= 0b11110110;
 }
 
@@ -40,11 +40,11 @@ void stopleft(){
 	PORTB &= 0b11111010;
 }
 
-void startback(){
+void startforward(){
 	PORTB |= 0b00000110;
 }
 
-void stopback(){
+void stopforward(){
 	PORTB &= 0b11111001;
 }
 
