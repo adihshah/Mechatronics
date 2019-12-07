@@ -9,8 +9,6 @@
  * Lecture Slide 
  * Arduino Pinout
  * Set Pins B1 and B2 (Bot moves forward) to 25% PWM using Timer1
- * Doubts: 
- * 1.Can we use timer1? (Since its used for color sensor)
  */ 
 
 
@@ -22,8 +20,47 @@
 
 int period=0;
 
-//Can't ever have B0,B1 or B2,B3 both high at the same time
+//Can't ever have B0,B1(Motor1) or B2,B3(Motor2) both high at the same time
+//Originally:
+//Right wheel is B0 and B1
+//Left wheel is B2 and B3
 
+//Right wheel is B0 and B1
+//Change wiring of right wheel such that B0 -> B1 and B1 -> B2
+//Start forward - B1 -> 1 B0 -> 0 becomes B2 -> 1 and B1 -> 0
+//Start back - B1 -> 0 and B0 -> 1 become B2 -> 0 and B1 -> 1
+//Use timer1 with pins B1 and B2
+// pwm on 9 and 10 (OC1A and OC1B)
+
+//Left wheel is B2 and B3
+//Change wiring of left wheel such that B2 -> D3 and B3 -> B3
+//Start forward - B2 -> 1 B3 -> 0 becomes D3 -> 1 and B3 -> 0
+//Start back - B2 -> 0 and B3 -> 1 become D3 -> 0 and B3 -> 1
+//Use timer2 with pins B3 and D3
+// pwm on 3 and 11 (OC2B and OC2A)
+
+void startforward(){
+	PORTB |= 0b00000100;
+	PORTD |= 0b00001000;
+}
+
+void stopforward(){
+	PORTB &= 0b11111011;
+	PORTD &= 0b11110111;
+}
+
+void startback(){
+	PORTB |= 0b00001010;
+}
+
+void stopback(){
+	PORTB &= 0b11110101;
+}
+
+
+//Acc to old wiring where //Right wheel is B0 and B1
+//Left wheel is B2 and B3
+/*
 void startback(){
 	PORTB |= 0b00001001; 
 }
@@ -55,6 +92,7 @@ void startforward(){
 void stopforward(){
 	PORTB &= 0b11111001;
 }
+
 
 void moveinsquare(){
 	
@@ -116,7 +154,7 @@ void moveinsquare(){
 
    	stopright(); //at this point, it is back to original position
 }
-	
+*/
 
 ISR(PCINT0_vect){
 	if((PINB&0b00010000)==0b00010000){ // Check rising or falling edge
@@ -223,7 +261,7 @@ int main(void) {
 	if (getColor() == 1) initcolor = 1;
 
 	DDRB = 0b00001111;
-	DDRD = 0b00100000; 
+	DDRD = 0b00101000; 
 
 
 
@@ -262,11 +300,64 @@ int main(void) {
 				_delay_ms(900);
 				stopforward();
 				PORTD |= 0b00100000; //Start the motor
-				_delay_ms(505); //continue motor for 0.4 seconds
+				_delay_ms(480); //continue motor for 0.4 seconds
 				PORTD &= 0b11011111; //Stop the motor
 				startback();
 				_delay_ms(1800);
 				stopback();
+
+				//Start PWM now
+				
+				//So set OCR1A and OCR1B, both to be out of phase
+				//Use timer1 with pins B1 and B2
+				// pwm on 9 and 10 (OC1A and OC1B)
+				DDRB |= 0b00000110;
+
+				
+				// Set the timer1 prescaler to 1
+				// CS12,CS11,CS10 = 001 (table 20-7)
+				// select waveform generation mode 8 (phase and frequency correct PWM)
+				// WGM13,WGM12,WGM11,WGM10 = 1000 (table 20-7)
+				// set COM bits. clear OC1A on up-counting, set on down-counting; set OC1B on up-counting, clear on down-counting (this makes them out of phase)
+				// COM1A1,COM1A0 = 10 (Table 20-5)// COM1B1,COM1B0 = 11 (Table 20-5)
+				TCCR1A = 0b10110000;
+				TCCR1B = 0b00010001;
+
+				// in Table 20-6, TOP is the maximum value the timer will count up // to. That value is stored in this register.
+				ICR1 = 0xFFFF;
+
+				deadtime = 10;
+				
+				// our PWM set point (between 10 and 65,525 to prevent overflow
+				// 10 will be full speed one direction, 65,525 will be full speed
+				// in the other direction, halfway will be motor stopped
+				setpoint = 32767;
+				OCR1A = setPoint–deadTime; // set output compare registers such that OCR1B>OCR1A
+				OCR1B = setPoint+ deadTime; // this ensures dead time as shown on prev. slide
+				//Sets its in PWM for the right wheel 
+
+				DDRB |= 0b00001000;
+				DDRD |= 0b00001000;
+
+				// Set the timer1 prescaler to 1
+				// CS22,CS21,CS20 = 001 (page 206)
+				// select waveform generation mode 5 (phase correct PWM)
+				// WGM22,WGM21,WGM20 = 101 (page 205 )
+				// set COM bits. clear OC1A on up-counting, set on down-counting; set OC1B on up-counting, clear on down-counting (this makes them out of phase)
+				// COM2A1,COM2A0 = 10 (Table 20-5)// COM2B1,COM2B0 = 11 (Table 20-5)
+				TCCR1A = 0b10110001;
+				TCCR1B = 0b00001001;
+				
+				OCRA = 0xFF;
+				deadtime = 10;
+				setpoint = 127;
+				OCR1A = setPoint–deadTime; // set output compare registers such that OCR1B>OCR1A
+				OCR1B = setPoint+ deadTime; // this ensures dead time as shown on prev. slide
+				//Sets its in PWM for the left wheel 
+			
+				while (1){
+					
+				}
 				_delay_ms(100000);
 
 			}
