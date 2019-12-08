@@ -204,7 +204,6 @@ if (time<200) return 0;
 else return 1;
 }
 
-
 int main(void) {
 	init_uart(); // Initialize serial
 	initializeColor(); // Initialize color sensor
@@ -244,7 +243,7 @@ int main(void) {
 		}*/
 		//******************CHANGED*******************//
 
-		startforward();
+		startback();
 		_delay_ms(75); //can vary
 
 		int currcolor = getColor();
@@ -258,15 +257,24 @@ int main(void) {
 				TIMSK2 |= 0b00000010; //if enabled and 0 otherwise*/
 				numcolorchanges ++;
 				//rest of the logic
-				startforward();
+		startback();
 				_delay_ms(900);
-				stopforward();
-				PORTD |= 0b00100000; //Start the motor
+		stopback();
+				/*PORTD |= 0b00100000; //Start the motor
 				_delay_ms(505); //continue motor for 0.4 seconds
-				PORTD &= 0b11011111; //Stop the motor
-				startback();
+				PORTD &= 0b11011111; //Stop the motor*/
+				
+   				startleft(); //turn 180 degrees
+
+   				_delay_ms(1000);
+
+   				stopleft();
+
+		startback();
 				_delay_ms(1800);
-				stopback();
+						stopback();
+
+				
 				_delay_ms(100000);
 
 			}
